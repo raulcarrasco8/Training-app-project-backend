@@ -1,12 +1,13 @@
 
 
 const router = require("express").Router();
+const { isAuthenticated } = require("../middleware/jwt.middleware");
 const Workout = require("../models/Workout.model");
 
 
 
 // ✅ POST /api/workouts - Crear un nuevo workout
-router.post("/", (req, res) => {
+router.post("/", isAuthenticated, (req, res) => {
   Workout.create(req.body)
     .then((newWorkout) => {
       res.status(201).json(newWorkout);
@@ -34,8 +35,8 @@ router.get("/", (req, res) => {
 
 
 // ✅ GET /api/workouts/:workoutId - Obtener un workout por ID
-router.get("/:workoutId", (req, res) => {
-  Workout.findById(req.params.workoutIdId)
+router.get("/:workoutId", isAuthenticated, (req, res) => {
+  Workout.findById(req.params.workoutId)
     .then((workoutFromDB) => {
       res.json(workoutFromDB);
     })
@@ -48,8 +49,8 @@ router.get("/:workoutId", (req, res) => {
 
 
 // ✅ PUT /api/workouts/:workoutId - Actualizar un workout por ID
-router.put("/:workoutId", (req, res) => {
-  Workout.findByIdAndUpdate(req.params.studentId, req.body, { new: true })
+router.put("/:workoutId", isAuthenticated, (req, res) => {
+  Workout.findByIdAndUpdate(req.params.workoutId, req.body, { new: true })
     .then((updatedWorkout) => {
       res.json(updatedWorkout);
     })
@@ -62,8 +63,8 @@ router.put("/:workoutId", (req, res) => {
 
 
 // ✅ DELETE /api/workouts/:workoutId - Eliminar un workout por ID
-router.delete("/:workoutId", (req, res) => {
-  Workout.findByIdAndDelete(req.params.studentId)
+router.delete("/:workoutId", isAuthenticated, (req, res) => {
+  Workout.findByIdAndDelete(req.params.workoutId)
     .then(() => {
       res.json({ message: "Workout deleted successfully" });
     })
