@@ -15,6 +15,8 @@ const workoutSchema = new Schema(
     },
     discipline: {
         type: String,
+        enum: ["Run", "Cycling", "Swim", "Gym"],
+        required: [true, "Discipline is required"],
     },
     exercises: [String],
   },
