@@ -18,7 +18,10 @@ const workoutSchema = new Schema(
         enum: ["Run", "Cycling", "Swim", "Gym"],
         required: [true, "Discipline is required"],
     },
-    exercises: [String],
+    exercises: { 
+      type: String,
+       required: [true, "Exercises are required"] 
+    },
   },
 );
 
