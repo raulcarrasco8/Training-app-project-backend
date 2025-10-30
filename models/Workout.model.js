@@ -1,5 +1,5 @@
 
-const { Schema, model } = require("mongoose");
+const { Schema, model, mongo, default: mongoose } = require("mongoose");
 
 
 
@@ -14,9 +14,9 @@ const workoutSchema = new Schema(
       required: [true, "Description is required"],
     },
     discipline: {
-        type: String,
-        enum: ["Run", "Cycling", "Swim", "Gym"],
-        required: [true, "Discipline is required"],
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Discipline",
+        required: true,
     },
     exercises: { 
       type: String,

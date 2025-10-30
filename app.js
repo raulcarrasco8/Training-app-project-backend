@@ -15,6 +15,10 @@ const app = express();
 require("./config")(app);
 
 // 👇 Start handling routes here
+
+const disciplineRoutes = require("./routes/discipline.routes");
+app.use("/api/disciplines", disciplineRoutes);
+
 const indexRoutes = require("./routes/index.routes");
 app.use("/api", indexRoutes);
 

@@ -4,8 +4,6 @@ const router = require("express").Router();
 const { isAuthenticated } = require("../middleware/jwt.middleware");
 const Workout = require("../models/Workout.model");
 
-
-
 // ✅ POST /api/workouts - Crear un nuevo workout
 router.post("/", isAuthenticated, (req, res) => {
   Workout.create(req.body)
@@ -19,10 +17,13 @@ router.post("/", isAuthenticated, (req, res) => {
     });
 });
 
-
-// ✅ GET /api/workouts - Obtener todos los workouts 
+// ✅ GET /api/workouts - Obtener todos los workouts (con filtro opcional por disciplina)
 router.get("/", (req, res) => {
-  Workout.find()
+  const { discipline } = req.query;
+  const filter = discipline ? { discipline } : {};
+  
+  Workout.find(filter)
+    .populate("discipline")
     .then((workoutFromDB) => {
       res.json(workoutFromDB);
     })
@@ -33,10 +34,10 @@ router.get("/", (req, res) => {
     });
 });
 
-
 // ✅ GET /api/workouts/:workoutId - Obtener un workout por ID
 router.get("/:workoutId", isAuthenticated, (req, res) => {
   Workout.findById(req.params.workoutId)
+    .populate("discipline")
     .then((workoutFromDB) => {
       res.json(workoutFromDB);
     })
@@ -47,10 +48,10 @@ router.get("/:workoutId", isAuthenticated, (req, res) => {
     });
 });
 
-
 // ✅ PUT /api/workouts/:workoutId - Actualizar un workout por ID
 router.put("/:workoutId", isAuthenticated, (req, res) => {
   Workout.findByIdAndUpdate(req.params.workoutId, req.body, { new: true })
+    .populate("discipline")
     .then((updatedWorkout) => {
       res.json(updatedWorkout);
     })
@@ -60,7 +61,6 @@ router.put("/:workoutId", isAuthenticated, (req, res) => {
       res.status(500).json({ message: "Error updating workout in the DB" });
     });
 });
-
 
 // ✅ DELETE /api/workouts/:workoutId - Eliminar un workout por ID
 router.delete("/:workoutId", isAuthenticated, (req, res) => {
@@ -74,6 +74,5 @@ router.delete("/:workoutId", isAuthenticated, (req, res) => {
       res.status(500).json({ message: "Error deleting Workout from the DB" });
     });
 });
-
 
 module.exports = router;
