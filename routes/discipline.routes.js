@@ -1,53 +1,65 @@
+const router = require("express").Router();
+const mongoose = require("mongoose");
+const Discipline = require("../models/Discipline.model");
+const Workout = require("../models/Workout.model");
+const { isAuthenticated } = require("../middleware/jwt.middleware");
 
-const router = require('express').Router();
-const mongoose = require('mongoose');
-const Discipline = require('../models/Discipline.model');
-const Workout = require('../models/Workout.model');
-const { isAuthenticated } = require('../middleware/jwt.middleware');    
+// Todas las rutas de disciplinas requieren usuario autenticado
+router.use(isAuthenticated);
 
-// ✅ POST /api/disciplines - Crear una nueva disciplina
-router.post('/', isAuthenticated, (req, res) => {
-  Discipline.create(req.body)
-    .then((newDiscipline) => {
-      res.status(201).json(newDiscipline);
-    })
-    .catch((err) => {
-      console.error('Error creating discipline:', err);
-      res.status(500).json({status: 'error', message: 'Failed to create discipline'});
+// ✅ POST /api/disciplines - Crear una nueva disciplina del usuario
+router.post("/", async (req, res) => {
+  // Solo se aceptan los campos permitidos; el owner sale siempre del token
+  const { name, description, imgUrl } = req.body;
+
+  try {
+    const newDiscipline = await Discipline.create({
+      name,
+      description,
+      imgUrl,
+      owner: req.payload._id,
     });
+    res.status(201).json(newDiscipline);
+  } catch (err) {
+    if (err.name === "ValidationError") {
+      return res.status(400).json({ message: err.message });
+    }
+    console.error("Error creating discipline:", err);
+    res.status(500).json({ message: "Failed to create discipline" });
+  }
 });
 
-
-// ✅ GET /api/disciplines - Obtener todas las disciplinas
-router.get('/', (req, res) => {
-  Discipline.find()
-    .then((disciplinesFromDB) => {
-      res.status(200).json(disciplinesFromDB);
-    })
-    .catch((err) => {
-      console.error('Error fetching disciplines:', err);
-      res.status(500).json({status: 'error', message: 'Failed to fetch disciplines'});
-    });
+// ✅ GET /api/disciplines - Obtener las disciplinas del usuario
+router.get("/", async (req, res) => {
+  try {
+    const disciplines = await Discipline.find({ owner: req.payload._id });
+    res.status(200).json(disciplines);
+  } catch (err) {
+    console.error("Error fetching disciplines:", err);
+    res.status(500).json({ message: "Failed to fetch disciplines" });
+  }
 });
 
-// ✅ DELETE /api/disciplines/:disciplineId - Eliminar una disciplina por ID
+// ✅ DELETE /api/disciplines/:disciplineId - Eliminar una disciplina del usuario
 // Se bloquea el borrado si la disciplina tiene workouts asociados,
 // para no dejar workouts huérfanos (populate devolvería null).
-router.delete('/:disciplineId', isAuthenticated, async (req, res) => {
+router.delete("/:disciplineId", async (req, res) => {
   const { disciplineId } = req.params;
+  const owner = req.payload._id;
 
   if (!mongoose.isValidObjectId(disciplineId)) {
-    return res.status(400).json({ message: 'Invalid discipline id' });
+    return res.status(400).json({ message: "Invalid discipline id" });
   }
 
   try {
-    const discipline = await Discipline.findById(disciplineId);
+    // 404 tanto si no existe como si es de otro usuario (no revelamos que existe)
+    const discipline = await Discipline.findOne({ _id: disciplineId, owner });
 
     if (!discipline) {
-      return res.status(404).json({ message: 'Discipline not found' });
+      return res.status(404).json({ message: "Discipline not found" });
     }
 
-    const workoutCount = await Workout.countDocuments({ discipline: disciplineId });
+    const workoutCount = await Workout.countDocuments({ discipline: disciplineId, owner });
 
     if (workoutCount > 0) {
       return res.status(409).json({
@@ -57,10 +69,10 @@ router.delete('/:disciplineId', isAuthenticated, async (req, res) => {
     }
 
     await discipline.deleteOne();
-    res.json({ message: 'Discipline deleted successfully' });
+    res.json({ message: "Discipline deleted successfully" });
   } catch (err) {
-    console.error('Error deleting discipline:', err);
-    res.status(500).json({ status: 'error', message: 'Failed to delete discipline' });
+    console.error("Error deleting discipline:", err);
+    res.status(500).json({ message: "Failed to delete discipline" });
   }
 });
 
