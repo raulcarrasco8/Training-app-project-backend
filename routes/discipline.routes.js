@@ -1,6 +1,8 @@
 
 const router = require('express').Router();
+const mongoose = require('mongoose');
 const Discipline = require('../models/Discipline.model');
+const Workout = require('../models/Workout.model');
 const { isAuthenticated } = require('../middleware/jwt.middleware');    
 
 // ✅ POST /api/disciplines - Crear una nueva disciplina
@@ -29,15 +31,37 @@ router.get('/', (req, res) => {
 });
 
 // ✅ DELETE /api/disciplines/:disciplineId - Eliminar una disciplina por ID
-router.delete('/:disciplineId', isAuthenticated, (req, res) => {
-  Discipline.findByIdAndDelete(req.params.disciplineId)
-    .then(() => {
-      res.json({ message: "Discipline deleted successfully" });
-    })
-    .catch((err) => {
-      console.error('Error deleting discipline:', err);
-      res.status(500).json({status: 'error', message: 'Failed to delete discipline'});
-    });
+// Se bloquea el borrado si la disciplina tiene workouts asociados,
+// para no dejar workouts huérfanos (populate devolvería null).
+router.delete('/:disciplineId', isAuthenticated, async (req, res) => {
+  const { disciplineId } = req.params;
+
+  if (!mongoose.isValidObjectId(disciplineId)) {
+    return res.status(400).json({ message: 'Invalid discipline id' });
+  }
+
+  try {
+    const discipline = await Discipline.findById(disciplineId);
+
+    if (!discipline) {
+      return res.status(404).json({ message: 'Discipline not found' });
+    }
+
+    const workoutCount = await Workout.countDocuments({ discipline: disciplineId });
+
+    if (workoutCount > 0) {
+      return res.status(409).json({
+        message: `This discipline has ${workoutCount} workout(s). Delete or reassign them first.`,
+        workoutCount,
+      });
+    }
+
+    await discipline.deleteOne();
+    res.json({ message: 'Discipline deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting discipline:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to delete discipline' });
+  }
 });
 
 module.exports = router;
