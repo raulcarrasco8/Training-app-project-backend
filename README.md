@@ -1,108 +1,126 @@
+# 🏋️ Training App — Backend (API)
 
+REST API built with Node.js, Express and MongoDB to manage users, disciplines and workouts. It powers the [Training App frontend](https://github.com/raulcarrasco8/Training-app-project-frontend).
 
-## 🧠 **README — BACKEND**
+**🔗 Live API:** https://training-app-project-backend.onrender.com
+**🖥️ Live app:** https://app-training.vercel.app/
+**⚙️ Frontend repo:** [Training App Frontend](https://github.com/raulcarrasco8/Training-app-project-frontend)
 
-
-# 🏋️‍♂️ Training App — Backend
-
-## 📝 Descripción
-
-**Training App** es una API construida con **Express** y **MongoDB**, que permite gestionar usuarios, disciplinas y entrenamientos.  
-Este backend se conecta con el frontend desarrollado en React para ofrecer una experiencia completa de seguimiento de entrenamientos.
-
-> ⚠️ Este repositorio contiene el **backend (API)** del proyecto.  
-> El **frontend** se encuentra en este enlace:  
-> 👉 [Training App Frontend] https://github.com/raulcarrasco8/Training-app-project-frontend
+> ⏳ **Heads up:** the API runs on Render's free tier, so the first request may take ~50 seconds while the server wakes up.
 
 ---
 
-## ⚙️ Tecnologías utilizadas
+## 🛠️ Tech stack
 
-- Express.js  
-- MongoDB + Mongoose  
-- Node.js  
-- Render (para despliegue)  
-- Postman (para pruebas de API)
+| Area | Technologies |
+|---|---|
+| Runtime & framework | Node.js, Express.js |
+| Database | MongoDB Atlas + Mongoose |
+| Auth | JSON Web Tokens (JWT), bcrypt |
+| Deployment | Render |
+| API testing | Postman |
+
+## 📚 API endpoints
+
+### 🔐 Auth
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/auth/signup` | Register a new user | — |
+| POST | `/auth/login` | Log in and receive a JWT | — |
+| GET | `/auth/verify` | Verify the current token | 🔒 |
+
+### 🏁 Disciplines
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/api/disciplines` | Create a discipline | 🔒 |
+| GET | `/api/disciplines` | Get all disciplines | — |
+| DELETE | `/api/disciplines/:disciplineId` | Delete a discipline | 🔒 |
+
+### 💪 Workouts
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/api/workouts` | Create a workout | 🔒 |
+| GET | `/api/workouts` | Get all workouts (optional filter: `?discipline=<id>`) | — |
+| GET | `/api/workouts/:workoutId` | Get a workout by ID | 🔒 |
+| PUT | `/api/workouts/:workoutId` | Update a workout | 🔒 |
+| DELETE | `/api/workouts/:workoutId` | Delete a workout | 🔒 |
+
+Routes marked with 🔒 are protected by an `express-jwt` middleware and expect the token in the `Authorization` header:
+
+```
+Authorization: Bearer <your_token>
+```
+
+## 🧠 Technical decisions
+
+- **JWT authentication:** stateless auth that fits a separate frontend and API. The server does not need to store sessions, and an `express-jwt` middleware protects private routes.
+- **Secure password handling:** passwords are hashed with bcrypt before being stored and are never returned in any response. Signup validates email format and password strength (min. 6 characters, with uppercase, lowercase and a number).
+- **Short-lived tokens:** JWTs are signed with HS256 and expire after 6 hours, limiting the impact of a leaked token.
+- **Layered structure:** routes, models, middlewares, config and error handling live in separate folders, so each part has a single responsibility and the codebase is easy to navigate and extend.
+- **Centralized error handling:** errors are handled in one place instead of in every route, which keeps responses consistent and the route code clean.
+- **CORS restricted by environment variable:** the allowed origin is set in `.env`, so the same code works locally and in production.
+
+## 🔮 What I'd improve today
+
+- [ ] Add tests with Jest + Supertest
+- [ ] Set up CI with GitHub Actions
+- [ ] Migrate to TypeScript
+- [ ] Protect the remaining public `GET` routes and scope data per user (store an `owner` on each discipline and workout, and only return or modify the user's own data)
+- [ ] Add input validation on discipline and workout requests
+- [ ] Add an endpoint to update disciplines
 
 ---
 
-## 🚀 Instrucciones para ejecutar el proyecto localmente
+## 🚀 Run it locally
 
-1. **Clonar el repositorio**
+1. Clone the repo
 
-   ```bash
-   git clone https://github.com/raulcarrasco8/Training-app-project-backend
+```bash
+git clone https://github.com/raulcarrasco8/Training-app-project-backend
+cd Training-app-project-backend
+```
 
-2. **Instalar dependencias**
+2. Install dependencies
 
-    npm install
+```bash
+npm install
+```
 
-3. **Configurar variables de entorno**
+3. Create a `.env` file in the project root:
 
-    Crea un archivo .env en la raíz del proyecto con las siguientes variables:
-        PORT=5005
-        ORIGIN=http://localhost:5173
-        MONGODB_URI=tu_uri_de_mongoatlas
+```env
+PORT=5005
+ORIGIN=http://localhost:5173
+MONGODB_URI=your_mongodb_atlas_uri
+TOKEN_SECRET=your_jwt_secret
+```
 
-    💡 Para conectar con MongoDB Atlas, debes crear una cuenta en https://www.mongodb.com/atlas
-        , crear una base de datos y obtener tu URI de conexión.
+To get a MongoDB URI, create a free cluster on [MongoDB Atlas](https://www.mongodb.com/atlas) and copy its connection string.
 
-4. **Ejecutar el servidor**
+4. Start the server
 
-    npm run dev
-    El backend se ejecutará por defecto en:
-    http://localhost:5005
+```bash
+npm run dev
+```
 
-## 🌐 Demo
+The API runs at http://localhost:5005
 
-Backend desplegado en Render:
-👉 https://training-app-project-backend.onrender.com
+## 📂 Project structure
 
-Frontend desplegado en Vercel:
-👉 https://app-training.vercel.app/
+```
+├── config/
+├── db/
+├── error-handling/
+├── middleware/
+├── models/
+├── routes/
+├── app.js
+└── server.js
+```
 
-## 📚 Endpoints principales
+## 👨‍💻 Author
 
-## 🔐 Autenticación
-
-Método	Endpoint	Descripción
-
-POST	/auth/signup	Registrar nuevo usuario
-POST	/auth/login	Iniciar sesión
-GET	/auth/verify	Verificar token de autenticación
-
-## 🏁 Disciplinas
-
-Método	Endpoint	Descripción
-
-POST	/api/disciplines	Crear nueva disciplina
-GET	/api/disciplines	Obtener todas las disciplinas
-DELETE	/api/disciplines/:disciplineId	Eliminar una disciplina
-
-## 💪 Entrenamientos
-
-Método	Endpoint	Descripción
-
-POST	/api/workouts	Crear un nuevo entrenamiento
-GET	/api/workouts	Obtener todos los entrenamientos
-GET	/api/workouts/:workoutId	Obtener un entrenamiento por ID
-PUT	/api/workouts/:workoutId	Editar un entrenamiento existente
-DELETE	/api/workouts/:workoutId	Eliminar un entrenamiento
-
-## 📂 Estructura básica del proyecto
-
-src/
- ├── config/
- ├── db/
- ├── error-handling/
- ├── middlewares/
- ├── models/
- ├── node_modules/
- ├── routes/
- ├── app.js
- └── server.js
-
-
-## 👨‍💻 Autor
-
-Proyecto desarrollado por Raúl Carrasco.
+**Raúl Carrasco** — [LinkedIn](https://www.linkedin.com/in/raul-webdeveloper/) · [GitHub](https://github.com/raulcarrasco8)
