@@ -40,6 +40,41 @@ router.get("/", async (req, res) => {
   }
 });
 
+// ✅ PUT /api/disciplines/:disciplineId - Actualizar una disciplina del usuario
+router.put("/:disciplineId", async (req, res) => {
+  const { disciplineId } = req.params;
+
+  if (!mongoose.isValidObjectId(disciplineId)) {
+    return res.status(400).json({ message: "Invalid discipline id" });
+  }
+
+  // Solo se aceptan los campos permitidos (nunca _id ni owner)
+  const { name, description, imgUrl } = req.body;
+  const fields = { name, description, imgUrl };
+  Object.keys(fields).forEach((key) => fields[key] === undefined && delete fields[key]);
+
+  try {
+    // 404 tanto si no existe como si es de otro usuario (no revelamos que existe)
+    const updatedDiscipline = await Discipline.findOneAndUpdate(
+      { _id: disciplineId, owner: req.payload._id },
+      fields,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedDiscipline) {
+      return res.status(404).json({ message: "Discipline not found" });
+    }
+
+    res.json(updatedDiscipline);
+  } catch (err) {
+    if (err.name === "ValidationError") {
+      return res.status(400).json({ message: err.message });
+    }
+    console.error("Error updating discipline:", err);
+    res.status(500).json({ message: "Failed to update discipline" });
+  }
+});
+
 // ✅ DELETE /api/disciplines/:disciplineId - Eliminar una disciplina del usuario
 // Se bloquea el borrado si la disciplina tiene workouts asociados,
 // para no dejar workouts huérfanos (populate devolvería null).
