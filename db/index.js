@@ -16,4 +16,7 @@ mongoose
   })
   .catch((err) => {
     console.error("Error connecting to mongo: ", err);
+    // Sin base de datos la API no puede funcionar: paramos el proceso para que el fallo
+    // sea evidente en local y para que Render reinicie el servicio automáticamente
+    process.exit(1);
   });
