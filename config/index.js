@@ -13,7 +13,12 @@ const cookieParser = require("cookie-parser");
 // unless the request is made from the same domain, by default express wont accept POST requests
 const cors = require("cors");
 
-const FRONTEND_URL = process.env.ORIGIN || "http://localhost:3000";
+// ORIGIN admite varias URLs separadas por comas, p. ej.:
+// ORIGIN=http://localhost:5173,https://app-training.vercel.app
+const ALLOWED_ORIGINS = (process.env.ORIGIN || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 // Middleware configuration
 module.exports = (app) => {
@@ -24,7 +29,7 @@ module.exports = (app) => {
   // controls a very specific header to pass headers from the frontend
   app.use(
     cors({
-      origin: [FRONTEND_URL],
+      origin: ALLOWED_ORIGINS,
     })
   );
 
