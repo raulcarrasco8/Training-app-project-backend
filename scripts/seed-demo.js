@@ -1,7 +1,7 @@
 // Crea (o resetea) el usuario demo con disciplinas y workouts de ejemplo.
-// Uso: npm run seed:demo
+// Uso: npm run seed:demo (desarrollo) o npm run seed:demo:prod (producción)
 // Solo toca los datos del usuario demo; el resto de usuarios no se modifica.
-require("dotenv").config({ quiet: true });
+const { getMongoUri } = require("./db-uri");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const User = require("../models/User.model");
@@ -111,7 +111,7 @@ const daysAgo = (days) => {
 };
 
 async function seedDemo() {
-  await mongoose.connect(process.env.MONGODB_URI);
+  await mongoose.connect(getMongoUri());
   console.log(`Connected to "${mongoose.connection.name}"`);
 
   // 1. Usuario demo: se crea si no existe y se le restablece la contraseña

@@ -125,8 +125,11 @@ npm install
 PORT=5005
 # One or more allowed frontend URLs, separated by commas
 ORIGIN=http://localhost:5173
-MONGODB_URI=your_mongodb_atlas_uri
+# Development database
+MONGODB_URI=your_mongodb_atlas_uri/training-app-dev
 TOKEN_SECRET=your_jwt_secret
+# Optional: production database, only used by the *:prod scripts
+PROD_MONGODB_URI=your_mongodb_atlas_uri/training-app
 ```
 
 To get a MongoDB URI, create a free cluster on [MongoDB Atlas](https://www.mongodb.com/atlas) and copy its connection string.
@@ -147,6 +150,17 @@ npm run seed:demo
 
 This creates `demo@trainingapp.dev` / `Demo1234` with 7 disciplines and 12 workouts. Running it again resets the demo data without touching other users.
 
+## 🧹 Database scripts
+
+| Command | What it does |
+|---|---|
+| `npm run seed:demo` | Create or reset the demo user in the development database |
+| `npm run seed:demo:prod` | Same, in the production database (`PROD_MONGODB_URI`) |
+| `npm run cleanup:orphans` | Show disciplines and workouts whose owner no longer exists (dry run) |
+| `npm run cleanup:orphans:prod` | Same, in production |
+
+To actually delete the orphaned documents, add `-- --apply`, e.g. `npm run cleanup:orphans:prod -- --apply`.
+
 ## 📂 Project structure
 
 ```
@@ -157,7 +171,7 @@ This creates `demo@trainingapp.dev` / `Demo1234` with 7 disciplines and 12 worko
 ├── middleware/       # JWT authentication
 ├── models/           # Mongoose models: User, Discipline, Workout
 ├── routes/           # Auth, disciplines, workouts and health routes
-├── scripts/          # Demo data seed
+├── scripts/          # Demo seed and database cleanup
 ├── app.js
 └── server.js
 ```
